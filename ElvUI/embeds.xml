@@ -3,5 +3,4 @@
     <Script file="Libraries\LibStub\LibStub.lua"/>
     <Include file="Libraries\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
     <Script file="Libraries\LibDataBroker-1.1\LibDataBroker-1.1.lua"/>
-    <Include file="Libraries\SynastriaCoreLib-1.0\SynastriaCoreLib-1.0.xml" />
 </Ui>

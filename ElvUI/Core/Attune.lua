@@ -1,8 +1,6 @@
 local E, L, V, P, G = unpack(ElvUI);
 local B = E:GetModule("Bags")
 
-local SynastriaCoreLib = LibStub('SynastriaCoreLib-1.0')
-
 Attune = {}
 
 function Attune:AddAtuneIcon(slot)
@@ -22,16 +20,56 @@ function Attune:AddAtuneIcon(slot)
 	end
 end
 
+-- ʕ •ᴥ•ʔ✿ Local helpers replacing removed SynastriaCoreLib functionality ✿ ʕ •ᴥ•ʔ
+local function ExtractItemId(itemIdOrLink)
+	if type(itemIdOrLink) == 'number' then
+		return itemIdOrLink
+	elseif type(itemIdOrLink) == 'string' then
+		-- Accept full hyperlinks or raw item strings
+		local id = itemIdOrLink:match('item:(%d+)')
+		return id and tonumber(id) or nil
+	end
+	return nil
+end
+
+-- ʕ •ᴥ•ʔ✿ Wrapper around the native CanAttuneItemHelper API (mirrors old CheckItemValid) ✿ ʕ •ᴥ•ʔ
+local function CheckItemValid(itemIdOrLink)
+	if not CanAttuneItemHelper then return 0 end
+	local itemId = ExtractItemId(itemIdOrLink)
+	if not itemId then return 0 end
+	return CanAttuneItemHelper(itemId)
+end
+
+-- ʕ •ᴥ•ʔ✿ Wrapper around native attunement-progress APIs ✿ ʕ •ᴥ•ʔ
+local function GetAttuneProgress(itemIdOrLink)
+	if type(itemIdOrLink) == 'string' and GetItemLinkAttuneProgress then
+		local progress = GetItemLinkAttuneProgress(itemIdOrLink)
+		if type(progress) == 'number' then return progress end
+	end
+
+	local itemId = ExtractItemId(itemIdOrLink)
+	if itemId and GetItemAttuneProgress then
+		local progress = GetItemAttuneProgress(itemId)
+		if type(progress) == 'number' then return progress end
+	end
+
+	return 0
+end
+
+-- ʕ •ᴥ•ʔ✿ Simple flag indicating whether required native APIs are present ✿ ʕ •ᴥ•ʔ
+local function IsServerApiLoaded()
+	return CanAttuneItemHelper ~= nil
+end
 
 function Attune:ToggleAttuneIcon(slot, itemIdOrLink, additionalXMargin)
 	Attune:UpdateItemLevelText(slot, itemIdOrLink)
 	Attune:AddAtuneIcon(slot)
 	slot.AttuneTexture:Hide()
 	slot.AttuneTextureBorder:Hide()
-	if not SynastriaCoreLib.isLoaded() or not E.db.bags.attuneProgress or not itemIdOrLink then
+	if not IsServerApiLoaded() or not E.db.bags.attuneProgress or not itemIdOrLink then
 		return
 	end
-	if SynastriaCoreLib.CheckItemValid(itemIdOrLink) == 0 then
+	if CheckItemValid(itemIdOrLink) == 0 then
 		return
 	end
 
@@ -48,14 +86,14 @@ function Attune:ToggleAttuneIcon(slot, itemIdOrLink, additionalXMargin)
 	slot.AttuneTexture:SetPoint("BOTTOMLEFT", xMargin + borderWidth, yMargin + borderWidth)
 	slot.AttuneTexture:SetWidth(width)
 
-	if SynastriaCoreLib.CheckItemValid(itemIdOrLink) == -2 then
+	if CheckItemValid(itemIdOrLink) == -2 then
 		slot.AttuneTextureBorder:SetHeight(minHeight + borderWidth*2)
 		slot.AttuneTexture:SetHeight(minHeight)
 		slot.AttuneTexture:SetVertexColor(0.74, 0.02, 0.02)
 		slot.AttuneTextureBorder:Show()
 		slot.AttuneTexture:Show()
-	elseif SynastriaCoreLib.CheckItemValid(itemIdOrLink) == 1 then
-		local progress = SynastriaCoreLib.GetAttuneProgress(itemIdOrLink)
+	elseif CheckItemValid(itemIdOrLink) == 1 then
+		local progress = GetAttuneProgress(itemIdOrLink)
 		if progress < 100 then
 			local height = math.max(maxHeight * (progress/100), minHeight)
 			slot.AttuneTextureBorder:SetHeight(height + borderWidth*2)
