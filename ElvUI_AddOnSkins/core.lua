@@ -570,6 +570,23 @@ local function getOptions()
 								type = "range",
 								min = 8, max = 30, step = 1,
 								name = "Row Height"
+							},
+							scootStatsStripeRows = {
+								order = 4,
+								type = "toggle",
+								name = "Alternate Row Background"
+							},
+							scootStatsWidth = {
+								order = 5,
+								type = "range",
+								min = 120, max = 400, step = 1,
+								name = "Frame Width"
+							},
+							scootStatsXOffset = {
+								order = 6,
+								type = "range",
+								min = -200, max = 200, step = 1,
+								name = "Horizontal Offset"
 							}
 						}
 					}
