@@ -12,8 +12,6 @@ local function restyleRow(row)
 	
 	local label = _G[name .. "Label"]
 	local stat = _G[name .. "StatText"]
-	local fontSize = E.db.addOnSkins.scootStatsFontSize or 16
-	local rowHeight = E.db.addOnSkins.scootStatsRowHeight or 16
 	
 	if label then
 		label:FontTemplate(nil, fontSize, "OUTLINE")
@@ -44,14 +42,10 @@ local function adjustFrameHeights()
 	if not charFrame then return end
 	
 	local f = ScootsStats.frames
-	local configHeight = E.db.addOnSkins.scootStatsHeight or 400
 	local charHeight = charFrame:GetHeight() - 88
 	
-	-- Use configured height or character frame height, whichever is smaller
-	local frameHeight = math.min(configHeight, charHeight)
-	
-	-- Set master frame height
-	f.master:SetHeight(frameHeight)
+	-- Set master frame height to match character frame
+	f.master:SetHeight(charHeight)
 	ScootsStats.frames.master:SetPoint('TOPRIGHT', _G['CharacterFrame'], 'TOPRIGHT', 0, 0)
 	
 	-- Reset CharacterFrame width to base width (override addon's width expansion)
@@ -65,49 +59,14 @@ local function adjustFrameHeights()
 	
 	-- Adjust scroll frame height accordingly (accounting for title and padding)
 	if f.scrollFrame then
-		local scrollHeight = frameHeight - 34 -- Account for title area
+		local scrollHeight = charHeight - 34 -- Account for title area
 		f.scrollFrame:SetHeight(scrollHeight)
 	end
 	
 	-- Adjust background height to match
 	if f.background then
-		f.background:SetHeight(frameHeight)
+		f.background:SetHeight(charHeight)
 	end
-end
-
--- ʕ •ᴥ•ʔ✿ Update ScootStats styling when config changes ✿ ʕ •ᴥ•ʔ
-local function updateScootStatsConfig()
-	if not ScootsStats or not ScootsStats.frames then return end
-	
-	local f = ScootsStats.frames
-	
-	-- Update title font size
-	if f.title and f.title.text then
-		local titleFontSize = math.max(10, (E.db.addOnSkins.scootStatsFontSize or 16) - 4)
-		f.title.text:FontTemplate(nil, titleFontSize, "OUTLINE")
-	end
-	
-	-- Force restyle all existing frames
-	if ScootsStats.sectionFrames then
-		for _, sFrame in pairs(ScootsStats.sectionFrames) do
-			if sFrame and sFrame.text then
-				sFrame.text.isStyled = false
-				restyleHeader(sFrame)
-			end
-		end
-	end
-	
-	if ScootsStats.rowFrames then
-		for _, rFrame in pairs(ScootsStats.rowFrames) do
-			if rFrame then
-				rFrame.isStyled = false
-				restyleRow(rFrame)
-			end
-		end
-	end
-	
-	-- Update frame heights
-	adjustFrameHeights()
 end
 
 -- ʕ •ᴥ•ʔ✿ ScootsStats Skin ✿ ʕ •ᴥ•ʔ
