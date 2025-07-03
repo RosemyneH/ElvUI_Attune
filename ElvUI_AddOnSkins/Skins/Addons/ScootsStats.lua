@@ -23,7 +23,18 @@ local function restyleRow(row)
 		stat:ClearAllPoints()
 		stat:SetPoint("RIGHT", row, "RIGHT", -6, 0)
 	end
+<<<<<<< Updated upstream
 	row:SetHeight(rowHeight)
+=======
+	-- ʕ ◕ᴥ◕ ʔ✿ Avoid forcing height as some frames override SetHeight requiring no args ✿ ʕ ◕ᴥ◕ ʔ
+	if row and row.GetHeight and (not row.GetHeight or (row.GetHeight and row:GetHeight() < 16)) then
+		-- Only set height when frame uses default Blizzard SetHeight implementation
+		local ok = pcall(function() row:SetHeight(16) end)
+		if not ok then
+			-- Silently ignore if overridden SetHeight throws error
+		end
+	end
+>>>>>>> Stashed changes
 	row.isStyled = true
 end
 
