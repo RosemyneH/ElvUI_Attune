@@ -60,9 +60,6 @@ local function restyleRow(row)
 		-- colour – light grey, 40 % alpha (easy to see on dark backdrop)
 		row.bgStripe:SetTexture(0.25, 0.25, 0.25, 0.4)
 
-		-- update width every time we resize the row
-		hooksecurefunc(row, "SetWidth", function(self) if self.bgStripe then self.bgStripe:SetAllPoints() end end)
-
 		-- show or hide depending on even/odd index & toggle
 		row.bgStripe:SetShown(stripesEnabled and (rowIndex % 2 == 0))
 	else
@@ -155,6 +152,7 @@ local function applyDimensionSettings()
 		if ScootsStats.rowFrames then
 			for _, rFrame in pairs(ScootsStats.rowFrames) do
 				rFrame:SetWidth(contentWidth)
+				if rFrame.bgStripe then rFrame.bgStripe:SetAllPoints() end
 			end
 		end
 	end
