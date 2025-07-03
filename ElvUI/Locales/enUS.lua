@@ -318,6 +318,27 @@ L["whispers"] = true
 L["yells"] = true
 L["|cFFE30000Lua error recieved. You can view the error message when you exit combat."] = true
 
+-- Attune
+L["Attune"] = true
+L["Display Attune Icons"] = true
+L["Displays attune progress on the item icon in bags/bank/character sheet."] = true
+L["Enable Alternate Color"] = true
+L["Change the attuned color from green to blue."] = true
+L["Invalid Items"] = true
+L["Color for items that cannot be attuned."] = true
+L["In Progress"] = true
+L["Color for items currently being attuned."] = true
+L["Completed"] = true
+L["Color for fully attuned items."] = true
+L["Completed (Alternate)"] = true
+L["Color for fully attuned items when alternate color is enabled."] = true
+L["Show in Bags"] = true
+L["Display attune progress in bag slots."] = true
+L["Show in Bank"] = true
+L["Display attune progress in bank slots."] = true
+L["Show in Character"] = true
+L["Display attune progress in character sheet equipment slots."] = true
+
 ----------------------------------
 L["RED_ENABLE"] = "|cFFff3333Enable|r"
 L["GREEN_ENABLE"] = "|cFF33ff33Enable|r"

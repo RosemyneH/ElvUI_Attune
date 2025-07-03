@@ -212,7 +212,8 @@ P.bags = {
 		items = {
 			questStarter = {r = 1, g = 1, b = 0},
 			questItem = {r = 1, g = 0.30, b = 0.30}
-		}
+		},
+
 	},
 	vendorGrays = {
 		enable = false,
@@ -275,6 +276,19 @@ P.bags = {
 		showBackdrop = false,
 		mouseover = false,
 		visibility = ""
+	}
+}
+
+--Attune
+P.attune = {
+	enabled = true,
+	alternateProgressAttuneColor = false,
+	showInBags = true,
+	showInBank = true,
+	colors = {
+		invalid = {r = 0.74, g = 0.02, b = 0.02},
+		inProgress = {r = 0.96, g = 0.63, b = 0.02},
+		completed = {r = 0, g = 0.64, b = 0.05},
 	}
 }
 

@@ -117,6 +117,7 @@ local addonAlias = {
 	["AuctioneerSuite"] = "Auc-Advanced",
 	["_NPCScanOverlay"] = "_NPCScan.Overlay",
 	["ElvinCDs"] = "!ElvinCDs",
+	["ScootsStats"] = "ScootsStats",
 }
 
 AS.addons = {}
@@ -536,6 +537,39 @@ local function getOptions()
 									["MONOCHROMEOUTLINE"] = "MONOCROMEOUTLINE",
 									["THICKOUTLINE"] = "THICKOUTLINE"
 								}
+							}
+						}
+					},
+					scootStatsGroup = {
+						order = 9,
+						type = "group",
+						name = "ScootStats",
+						get = function(info) return E.db.addOnSkins[info[#info]] end,
+						set = function(info, value) 
+							E.db.addOnSkins[info[#info]] = value
+							if AS.updateScootStatsConfig then
+								AS.updateScootStatsConfig()
+							end
+						end,
+						disabled = function() return not AS:IsAddonLODorEnabled("ScootsStats") end,
+						args = {
+							scootStatsHeight = {
+								order = 1,
+								type = "range",
+								min = 200, max = 800, step = 10,
+								name = "Frame Height"
+							},
+							scootStatsFontSize = {
+								order = 2,
+								type = "range",
+								min = 8, max = 24, step = 1,
+								name = L["Font Size"]
+							},
+							scootStatsRowHeight = {
+								order = 3,
+								type = "range",
+								min = 8, max = 30, step = 1,
+								name = "Row Height"
 							}
 						}
 					}

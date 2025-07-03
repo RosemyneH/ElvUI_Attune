@@ -266,29 +266,7 @@ E.Options.args.bags = {
 						}
 					}
 				},
-				attuneGroup = {
-					order = 18,
-					type = "group",
-					name = L["Attune"],
-					guiInline = true,
-					args = {
-						attuneProgress = {
-							order = 1,
-							type = "toggle",
-							name = L["Display Attune Icons"],
-							desc = L["Displays attune progress on the item icon in bags/bank/character sheet."],
-							set = function(info, value) E.db.bags.attuneProgress = value end
-						},
-						alternateProgressAttuneColor = {
-							order = 2,
-							type = "toggle",
-							name = L["Enable Alternate Color"],
-							desc = L["Change the attuned color from green to blue."],
-							disabled = function() return not E.db.bags.attuneProgress end,
-							set = function(info, value) E.db.bags.alternateProgressAttuneColor = value end
-						}
-					}
-				}
+
 			}
 		},
 		sizeGroup = {

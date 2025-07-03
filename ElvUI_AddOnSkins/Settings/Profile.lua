@@ -47,5 +47,9 @@ P.addOnSkins = {
 		leftWindowWidth = 203,
 		belowTopTab = false,
 		hideChat = "NONE",
-	}
+	},
+
+	scootStatsHeight = 400,
+	scootStatsFontSize = 16,
+	scootStatsRowHeight = 16,
 }

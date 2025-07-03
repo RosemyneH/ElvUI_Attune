@@ -66,8 +66,19 @@ function Attune:ToggleAttuneIcon(slot, itemIdOrLink, additionalXMargin)
 	Attune:AddAtuneIcon(slot)
 	slot.AttuneTexture:Hide()
 	slot.AttuneTextureBorder:Hide()
-	if not IsServerApiLoaded() or not E.db.bags.attuneProgress or not itemIdOrLink then
+	if not IsServerApiLoaded() or not E.db.attune.enabled or not itemIdOrLink then
 		return
+	end
+	
+	-- Check if we should show attune icons based on the slot type
+	local parent = slot:GetParent()
+	if parent and parent:GetName() then
+		local parentName = parent:GetName()
+		if parentName:find("Bank") and not E.db.attune.showInBank then
+			return
+		elseif parentName:find("Bag") and not E.db.attune.showInBags then
+			return
+		end
 	end
 	if CheckItemValid(itemIdOrLink) == 0 then
 		return
@@ -89,7 +100,7 @@ function Attune:ToggleAttuneIcon(slot, itemIdOrLink, additionalXMargin)
 	if CheckItemValid(itemIdOrLink) == -2 then
 		slot.AttuneTextureBorder:SetHeight(minHeight + borderWidth*2)
 		slot.AttuneTexture:SetHeight(minHeight)
-		slot.AttuneTexture:SetVertexColor(0.74, 0.02, 0.02)
+		slot.AttuneTexture:SetVertexColor(E.db.attune.colors.invalid.r, E.db.attune.colors.invalid.g, E.db.attune.colors.invalid.b)
 		slot.AttuneTextureBorder:Show()
 		slot.AttuneTexture:Show()
 	elseif CheckItemValid(itemIdOrLink) == 1 then
@@ -98,15 +109,11 @@ function Attune:ToggleAttuneIcon(slot, itemIdOrLink, additionalXMargin)
 			local height = math.max(maxHeight * (progress/100), minHeight)
 			slot.AttuneTextureBorder:SetHeight(height + borderWidth*2)
 			slot.AttuneTexture:SetHeight(height)
-			slot.AttuneTexture:SetVertexColor(0.96, 0.63, 0.02)
+			slot.AttuneTexture:SetVertexColor(E.db.attune.colors.inProgress.r, E.db.attune.colors.inProgress.g, E.db.attune.colors.inProgress.b)
 		else
 			slot.AttuneTextureBorder:SetHeight(maxHeight + borderWidth*2)
 			slot.AttuneTexture:SetHeight(maxHeight)
-			if not E.db.bags.alternateProgressAttuneColor then
-				slot.AttuneTexture:SetVertexColor(0, 0.64, 0.05)
-			else
-				slot.AttuneTexture:SetVertexColor(0.39, 0.56, 1)
-			end
+			slot.AttuneTexture:SetVertexColor(E.db.attune.colors.completed.r, E.db.attune.colors.completed.g, E.db.attune.colors.completed.b)
 		end
 		slot.AttuneTextureBorder:Show()
 		slot.AttuneTexture:Show()

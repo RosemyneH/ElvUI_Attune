@@ -12,6 +12,7 @@ Core.lua
 General.lua
 ActionBars.lua
 Auras.lua
+Attune.lua
 Bags.lua
 Chat.lua
 Cooldown.lua
