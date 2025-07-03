@@ -1,11 +1,6 @@
 [![Game Version](https://img.shields.io/badge/wow-3.3.5-blue.svg)](https://github.com/aurele-l/ElvUI_Attune)
 
-[![Game Version](https://img.shields.io/badge/wow-3.3.5-blue.svg)](https://github.com/aurele-l/ElvUI_Attune)
-
-# ElvUI - Synastria Edition (Wrath of the Lich King 3.3.5a)
-
-This is a specialized backported version of ElvUI for World of Warcraft - Wrath of the Lich King (3.3.5a), featuring specific enhancements for the Synastria private server.
-
+# ElvUI - Synastria Edition
 ElvUI is a comprehensive UI replacement. It completely revamps the default Blizzard UI, providing a more flexible and practical interface. With ElvUI, you only need to update this single addon, simplifying your addon management.
 
 ## Installation:
@@ -24,7 +19,6 @@ This version of ElvUI includes custom modifications designed to enhance your exp
     *   **Green:** Item is attuned.
     *   **Orange:** Item is not attuned.
     *   **Red:** Item cannot be attuned.
-    *   
 
 ![image](https://github.com/aurele-l/ElvUI_Attune/assets/9089337/89542e85-031d-49e1-b6e2-d078c96a980d)
 
