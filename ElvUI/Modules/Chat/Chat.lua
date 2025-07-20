@@ -1505,7 +1505,7 @@ CH.SecureSlashCMD = {
 	"^/cancelaura",
 	"^/cancelform",
 	"^/cast",
-	"^/castsequence",
+	-- "^/castsequence", -- ʕ •ᴥ•ʔ✿ Removed to fix castsequence macro functionality ✿ ʕ •ᴥ•ʔ
 	"^/equip",
 	"^/exit",
 	"^/logout",

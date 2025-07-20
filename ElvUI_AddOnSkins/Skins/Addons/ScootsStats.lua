@@ -108,14 +108,15 @@ local function restyleRow(row)
 	if parentWidth and parentWidth > 50 then
 		pcall(row.SetWidth, row, parentWidth - 4)
 	else
-		-- Parent width not finalized yet; update once when frame is next visible
+		-- ʕ •ᴥ•ʔ✿ Use delayed update instead of OnUpdate script to avoid macro interference ✿ ʕ •ᴥ•ʔ
 		if not row._pendingWidthUpdate then
 			row._pendingWidthUpdate = true
-			row:SetScript('OnUpdate', function(self)
-				local pw = self:GetParent() and self:GetParent():GetWidth() or 0
+			E:Delay(0.1, function()
+				if row and row:GetParent() then
+					local pw = row:GetParent():GetWidth() or 0
 				if pw > 50 then
-					pcall(self.SetWidth, self, pw - 4)
-					self:SetScript('OnUpdate', nil)
+						pcall(row.SetWidth, row, pw - 4)
+					end
 				end
 			end)
 		end
@@ -527,28 +528,27 @@ S:AddCallbackForAddon("ScootsStats", "ScootsStats", function()
 			end)
 		end
 
-		-- More specific CreateFrame hook for better performance
-		local originalCreateFrame = CreateFrame
-		CreateFrame = function(frameType, name, parent, ...)
-			local frame = originalCreateFrame(frameType, name, parent, ...)
-			
-			if name and parent and ScootsStats.frames and parent == ScootsStats.frames.scrollChild then
-				if string.find(name, "ScootsStatsSectionHead", 1, true) then
+		-- Hook ScootsStats functions that create frames instead of replacing global CreateFrame
+		if ScootsStats.createSectionHeader then
+			S:SecureHook(ScootsStats, "createSectionHeader", function(...)
+				local sectionFrame = ScootsStats.sectionFrames and ScootsStats.sectionFrames[#ScootsStats.sectionFrames]
+				if sectionFrame then
 					batchOperation(function()
-						if frame and frame.text then
-							restyleHeader(frame)
+						restyleHeader(sectionFrame)
+					end)
 						end
 					end)
-				elseif string.find(name, "ScootsStatsRow", 1, true) then
+		end
+		
+		if ScootsStats.createStatRow then
+			S:SecureHook(ScootsStats, "createStatRow", function(...)
+				local rowFrame = ScootsStats.rowFrames and ScootsStats.rowFrames[#ScootsStats.rowFrames]
+				if rowFrame then
 					batchOperation(function()
-						if frame then
-							restyleRow(frame)
-						end
+						restyleRow(rowFrame)
 					end)
 				end
-			end
-			
-			return frame
+			end)
 		end
 		
 		-- Hook CharacterFrame show/hide events to maintain height matching
@@ -575,24 +575,9 @@ S:AddCallbackForAddon("ScootsStats", "ScootsStats", function()
 		end
 	end)
 
-	-- INSTANT SetPoint hook - no throttling for resize operations
-	E:Delay(0.1, function() -- Give ScootsStats time to initialize
-		if ScootsStats and ScootsStats.frames and ScootsStats.frames.master then
-			local master = ScootsStats.frames.master
-			if not master._elvuiHooked then
-				-- React to external position adjustments
-				hooksecurefunc(master, "SetPoint", function()
-					applyDimensionSettings()
-					ensureScrollBarVisible()
-				end)
-				-- React to width changes issued by ScootsStats.updateStats
-				hooksecurefunc(master, "SetWidth", function()
-					applyDimensionSettings()
-				end)
-				master._elvuiHooked = true
-			end
-		end
-	end)
+	-- ʕ •ᴥ•ʔ✿ REMOVED: Problematic SetPoint/SetWidth hooks that break /castsequence macros ✿ ʕ •ᴥ•ʔ
+	-- ʕ •ᴥ•ʔ✿ These hooks interfere with secure macro execution by triggering frame operations ✿ ʕ •ᴥ•ʔ
+	-- ʕ •ᴥ•ʔ✿ during macro processing, which breaks /castsequence functionality ✿ ʕ •ᴥ•ʔ
 end)
 
 -- ʕ •ᴥ•ʔ✿ INSTANT config updater ✿ ʕ •ᴥ•ʔ

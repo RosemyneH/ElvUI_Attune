@@ -7,7 +7,31 @@ assert(ElvUF, "ElvUI was unable to locate oUF.")
 --Lua functions
 local _G = _G
 --WoW API / Variables
+MAX_BOSS_FRAMES = 9
 local MAX_BOSS_FRAMES = MAX_BOSS_FRAMES
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+f:SetScript("OnEvent", function(self, event)
+    local delay = 1 -- Delay in seconds
+    local elapsed = 0
+
+    self:SetScript("OnUpdate", function(self, delta)
+        elapsed = elapsed + delta
+        if elapsed >= delay then
+            self:SetScript("OnUpdate", nil) -- Stop running OnUpdate
+
+            for i = 1, MAX_BOSS_FRAMES do
+                local frame = _G["Boss"..i.."TargetFrame"]
+                if frame then
+                    frame:Hide()
+                    frame.Show = frame.Hide -- Prevent it from being shown again
+                end
+            end
+        end
+    end)
+end)
 
 local BossHeader = CreateFrame("Frame", "BossHeader", UIParent)
 BossHeader:SetFrameStrata("LOW")
