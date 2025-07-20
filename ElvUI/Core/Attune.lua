@@ -41,20 +41,32 @@ end
 
 -- ʕ •ᴥ•ʔ✿ Wrapper around the native CanAttuneItemHelper API (mirrors old CheckItemValid) ✿ ʕ •ᴥ•ʔ
 local function CheckItemValid(itemIdOrLink)
-	-- ʕ •ᴥ•ʔ✿ Cache API availability check ✿ ʕ •ᴥ•ʔ
-	if apiAvailable == nil then
-		apiAvailable = CanAttuneItemHelper ~= nil
+	-- ʕ •ᴥ•ʔ✿ Check if we should use custom API or fallback ✿ ʕ •ᴥ•ʔ
+	if ItemLocIsLoaded() and CustomExtractItemId then
+		-- ʕ •ᴥ•ʔ✿ Use custom API if available ✿ ʕ •ᴥ•ʔ
+		local itemId = ExtractItemId(itemIdOrLink)
+		if not itemId then return 0 end
+		
+		if itemValidCache[itemId] == nil then
+			-- Test if item can be attuned using custom API
+			itemValidCache[itemId] = CanAttuneItemHelper and CanAttuneItemHelper(itemId) or 0
+		end
+		return itemValidCache[itemId]
+	else
+		-- ʕ •ᴥ•ʔ✿ Fallback to native API check ✿ ʕ •ᴥ•ʔ
+		if apiAvailable == nil then
+			apiAvailable = CanAttuneItemHelper ~= nil
+		end
+		if not apiAvailable then return 0 end
+		
+		local itemId = ExtractItemId(itemIdOrLink)
+		if not itemId then return 0 end
+		
+		if itemValidCache[itemId] == nil then
+			itemValidCache[itemId] = CanAttuneItemHelper(itemId)
+		end
+		return itemValidCache[itemId]
 	end
-	if not apiAvailable then return 0 end
-	
-	local itemId = ExtractItemId(itemIdOrLink)
-	if not itemId then return 0 end
-	
-	-- ʕ •ᴥ•ʔ✿ Cache validation results ✿ ʕ •ᴥ•ʔ
-	if itemValidCache[itemId] == nil then
-		itemValidCache[itemId] = CanAttuneItemHelper(itemId)
-	end
-	return itemValidCache[itemId]
 end
 
 -- ʕ •ᴥ•ʔ✿ Wrapper around native attunement-progress APIs ✿ ʕ •ᴥ•ʔ
@@ -75,6 +87,11 @@ end
 
 -- ʕ •ᴥ•ʔ✿ Simple flag indicating whether required native APIs are present ✿ ʕ •ᴥ•ʔ
 local function IsServerApiLoaded()
+	-- ʕ •ᴥ•ʔ✿ Check for either custom API or native API ✿ ʕ •ᴥ•ʔ
+	if ItemLocIsLoaded() and CustomExtractItemId then
+		return true -- Custom API is available
+	end
+	
 	if apiAvailable == nil then
 		apiAvailable = CanAttuneItemHelper ~= nil
 	end
@@ -118,32 +135,17 @@ function Attune:ToggleAttuneIcon(slot, itemIdOrLink, additionalXMargin)
 	slot.AttuneTexture:Hide()
 	slot.AttuneTextureBorder:Hide()
 	
-	-- ʕ •ᴥ•ʔ✿ Debug: Check what's happening ✿ ʕ •ᴥ•ʔ
-	local serverApiLoaded = IsServerApiLoaded()
-	local attuneEnabled = E.db.attune and E.db.attune.enabled
-	local hasItem = itemIdOrLink ~= nil
-	
-	if not serverApiLoaded then
-		print("DEBUG: Server API not loaded")
-		return
-	end
-	if not attuneEnabled then
-		print("DEBUG: Attune not enabled in settings")
-		return
-	end
-	if not hasItem then
-		print("DEBUG: No item provided")
+	-- ʕ •ᴥ•ʔ✿ Early returns for better performance ✿ ʕ •ᴥ•ʔ
+	if not IsServerApiLoaded() or not E.db.attune.enabled or not itemIdOrLink then
 		return
 	end
 	
 	if not ShouldShowAttuneIcon(slot) then
-		print("DEBUG: Slot should not show attune icon")
 		return
 	end
 	
 	-- ʕ •ᴥ•ʔ✿ Single call to CheckItemValid ✿ ʕ •ᴥ•ʔ
 	local itemValidStatus = CheckItemValid(itemIdOrLink)
-	print("DEBUG: Item", itemIdOrLink, "has valid status:", itemValidStatus)
 	if itemValidStatus == 0 then
 		return
 	end
@@ -229,36 +231,4 @@ function Attune:ClearCaches()
 	wipe(itemValidCache)
 	colorCache = {}
 	apiAvailable = nil
-	print("DEBUG: Attune caches cleared, API availability reset")
-end
-
--- ʕ •ᴥ•ʔ✿ Debug function to check current status ✿ ʕ •ᴥ•ʔ
-function Attune:DebugStatus()
-	print("=== ATTUNE DEBUG STATUS ===")
-	print("Server API loaded:", IsServerApiLoaded())
-	print("CanAttuneItemHelper exists:", CanAttuneItemHelper ~= nil)
-	print("GetItemAttuneProgress exists:", GetItemAttuneProgress ~= nil)
-	print("GetItemLinkAttuneProgress exists:", GetItemLinkAttuneProgress ~= nil)
-	print("ItemLocIsLoaded exists:", ItemLocIsLoaded ~= nil)
-	print("CustomExtractItemId exists:", CustomExtractItemId ~= nil)
-	if E.db.attune then
-		print("Attune enabled:", E.db.attune.enabled)
-		print("Show in bags:", E.db.attune.showInBags)
-		print("Show in bank:", E.db.attune.showInBank)
-	else
-		print("E.db.attune is nil!")
-	end
-	print("API available cache:", apiAvailable)
-	print("========================")
-end
-
--- ʕ •ᴥ•ʔ✿ Slash commands for debugging ✿ ʕ •ᴥ•ʔ
-SLASH_ATTUNEDEBUG1 = "/attunedebug"
-SlashCmdList["ATTUNEDEBUG"] = function()
-	Attune:DebugStatus()
-end
-
-SLASH_ATTUNECLEAR1 = "/attuneclear"
-SlashCmdList["ATTUNECLEAR"] = function()
-	Attune:ClearCaches()
 end
