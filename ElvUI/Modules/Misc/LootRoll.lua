@@ -82,13 +82,6 @@ local rollMessages = locale == "deDE" and {
 	["(.*) eligió Codicia para: (.+)"] = 2,
 	["(.*) eligió Desencantar para: (.+)"] = 3,
 } or {
-	-- FIXED: Added patterns for custom server messages that use "You have selected" format
-	["^You automatically passed on: (.+) because you cannot loot that item.$"] = 0,
-	["^You passed on: (.+|r)$"] = 0,
-	["^You have selected Need for: (.+)$"] = 1,
-	["^You have selected Greed for: (.+)$"] = 2,
-	["^You have selected Disenchant for: (.+)$"] = 3,
-	-- Original patterns for standard messages
 	["^(.*) automatically passed on: (.+) because s?he cannot loot that item.$"] = 0,
 	["^(.*) passed on: (.+|r)$"] = 0,
 	["(.*) has selected Need for: (.+)"] = 1,
@@ -246,37 +239,8 @@ end
 
 local function statusbarOnUpdate(self)
 	local timeLeft = GetLootRollTimeLeft(self.parent.rollID)
-	local rollID = self.parent.rollID
-	
 	if timeLeft < 0 or timeLeft > self.parent.rollTime then
 		timeLeft = 0
-		-- When timer expires, clean up the frame directly
-		if timeLeft == 0 and not self.parent.cleanupScheduled then
-			self.parent.cleanupScheduled = true
-			
-			-- Schedule cleanup after a short delay to ensure all events are processed
-			C_Timer.After(0.5, function()
-				-- Find the frame in case the reference is stale
-				for _, frame in ipairs(M.RollBars) do
-					if frame.rollID == rollID then
-						M:ReleaseFrame(frame)
-						break
-					end
-				end
-			end)
-		end
-	elseif timeLeft == 0 and not self.parent.cleanupScheduled then
-		-- Also check for timeLeft exactly 0
-		self.parent.cleanupScheduled = true
-		
-		C_Timer.After(0.5, function()
-			for _, frame in ipairs(M.RollBars) do
-				if frame.rollID == rollID then
-					M:ReleaseFrame(frame)
-					break
-				end
-			end
-		end)
 	else
 		self.spark:Point("CENTER", self, "LEFT", (timeLeft / self.parent.rollTime) * self:GetWidth(), 0)
 	end
@@ -388,19 +352,14 @@ end
 
 function M:ReleaseFrame(frame)
 	frame:Hide()
-	local oldRollID = frame.rollID
 	frame.rollID = nil
 	frame.rollTime = nil
-	frame.cleanupScheduled = nil
 
 	for i = 0, 3 do
 		frame.rollButtons[i].text:SetText("")
 	end
 
 	twipe(frame.rollResults)
-	
-	-- Trigger layout update
-	AlertFrame_FixAnchors()
 end
 
 function M:GetFrame()
@@ -458,65 +417,16 @@ function M:START_LOOT_ROLL(_, rollID, rollTime)
 end
 
 function M:CANCEL_LOOT_ROLL(_, rollID)
-	for i, frame in ipairs(self.RollBars) do
-		-- Ensure both values are the same type for comparison
-		local frameRollID = tonumber(frame.rollID)
-		local targetRollID = tonumber(rollID)
-		
-		if frameRollID and targetRollID and frameRollID == targetRollID then
+	for _, frame in ipairs(self.RollBars) do
+		if frame.rollID == rollID then
 			self:ReleaseFrame(frame)
-			E:StaticPopup_Hide("CONFIRM_LOOT_ROLL", rollID)
+			E:StaticPopup_Hide("CONFIRM_LOOT_ROLL", self.rollID)
 			break
 		end
 	end
 end
 
--- FIXED: Enhanced ParseRollChoice function to handle custom server message formats
 function M:ParseRollChoice(msg)
-	local currentPlayer = UnitName("player")
-	
-	-- Check for "You have selected" patterns FIRST (these are the most reliable)
-	if find(msg, "^You have selected Need for: (.+)$") then
-		local _, _, itemName = find(msg, "^You have selected Need for: (.+)$")
-		if itemName then
-			return currentPlayer, itemName, 1
-		end
-	elseif find(msg, "^You have selected Greed for: (.+)$") then
-		local _, _, itemName = find(msg, "^You have selected Greed for: (.+)$")
-		if itemName then
-			return currentPlayer, itemName, 2
-		end
-	elseif find(msg, "^You have selected Disenchant for: (.+)$") then
-		local _, _, itemName = find(msg, "^You have selected Disenchant for: (.+)$")
-		if itemName then
-			return currentPlayer, itemName, 3
-		end
-	elseif find(msg, "^You passed on: (.+)$") then
-		local _, _, itemName = find(msg, "^You passed on: (.+)$")
-		if itemName then
-			return currentPlayer, itemName, 0
-		end
-	end
-	
-	-- Handle "Need Roll - X for [Item] by Player" messages
-	if find(msg, "^Need Roll %- %d+ for (.+) by (.+)$") then
-		local _, _, itemName, playerName = find(msg, "^Need Roll %- %d+ for (.+) by (.+)$")
-		if itemName and playerName then
-			return playerName, itemName, 1
-		end
-	elseif find(msg, "^Greed Roll %- %d+ for (.+) by (.+)$") then
-		local _, _, itemName, playerName = find(msg, "^Greed Roll %- %d+ for (.+) by (.+)$")
-		if itemName and playerName then
-			return playerName, itemName, 2
-		end
-	elseif find(msg, "^Disenchant Roll %- %d+ for (.+) by (.+)$") then
-		local _, _, itemName, playerName = find(msg, "^Disenchant Roll %- %d+ for (.+) by (.+)$")
-		if itemName and playerName then
-			return playerName, itemName, 3
-		end
-	end
-	
-	-- Try original patterns for compatibility
 	for regex, rollType in pairs(rollMessages) do
 		local _, _, playerName, itemName = find(msg, regex)
 
@@ -524,17 +434,10 @@ function M:ParseRollChoice(msg)
 			if locale == "ruRU" and rollType ~= 0 then
 				playerName, itemName = itemName, playerName
 			end
-			
-			-- Replace "You" with actual player name
-			if playerName == "You" then
-				playerName = currentPlayer
-			end
-			
+
 			return playerName, itemName, rollType
 		end
 	end
-	
-	return nil, nil, nil
 end
 
 function M:CHAT_MSG_LOOT(_, msg)
@@ -567,54 +470,5 @@ function M:LoadLootRoll()
 
 	for i = 1, NUM_GROUP_LOOT_FRAMES do
 		_G["GroupLootFrame"..i]:UnregisterEvent("CANCEL_LOOT_ROLL")
-	end
-	
-	-- FIXED: Add manual cleanup commands
-	SLASH_ELVUIROLLCLEANUP1 = "/rollcleanup"
-	SlashCmdList["ELVUIROLLCLEANUP"] = function(msg)
-		local command = msg:lower():trim()
-		
-		if command == "all" then
-			local count = 0
-			for i, frame in ipairs(M.RollBars) do
-				if frame.rollID then
-					M:ReleaseFrame(frame)
-					count = count + 1
-				end
-			end
-			print("ElvUI: Cleaned up " .. count .. " roll frames")
-		elseif command == "status" then
-			print("ElvUI Roll Frames Status:")
-			local activeFrames = 0
-			for i, frame in ipairs(M.RollBars) do
-				if frame.rollID then
-					local timeLeft = GetLootRollTimeLeft(frame.rollID)
-					print("  Frame " .. i .. ": rollID=" .. frame.rollID .. ", item=" .. (frame.itemButton.link or "nil") .. ", timeLeft=" .. tostring(timeLeft))
-					activeFrames = activeFrames + 1
-				end
-			end
-			if activeFrames == 0 then
-				print("  No active frames")
-			end
-		elseif command == "help" then
-			print("ElvUI Roll Cleanup Commands:")
-			print("  /rollcleanup status - Show all active frames")
-			print("  /rollcleanup all - Manually clean up all frames")
-			print("  /rollcleanup <rollID> - Clean up specific rollID")
-		else
-			local rollID = tonumber(command)
-			if rollID then
-				for i, frame in ipairs(M.RollBars) do
-					if frame.rollID == rollID then
-						M:ReleaseFrame(frame)
-						print("ElvUI: Cleaned up rollID " .. rollID)
-						return
-					end
-				end
-				print("ElvUI: No frame found for rollID " .. rollID)
-			else
-				print("ElvUI: Use '/rollcleanup help' for commands")
-			end
-		end
 	end
 end
